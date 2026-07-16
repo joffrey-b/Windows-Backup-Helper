@@ -1,7 +1,11 @@
 # Windows Backup Helper
 
+[![Release](https://img.shields.io/github/v/release/joffrey-b/Windows-Backup-Helper)](https://github.com/joffrey-b/Windows-Backup-Helper/releases/latest)
+[![License](https://img.shields.io/github/license/joffrey-b/Windows-Backup-Helper)](LICENSE)
+[![Downloads](https://img.shields.io/github/downloads/joffrey-b/Windows-Backup-Helper/total)](https://github.com/joffrey-b/Windows-Backup-Helper/releases)
+
 A Windows desktop app that backs up your files — from a Synology NAS, another network share, or
-any local folder — to local or external drives, without you having to remember `net use` commands
+any local folder — to local or external drives, and other network shares, without you having to remember `net use` commands
 or long [Robocopy](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/robocopy)
 invocations.
 
