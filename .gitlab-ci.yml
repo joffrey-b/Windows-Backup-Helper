@@ -1,0 +1,21 @@
+stages:
+  - build
+
+# Runs on your self-hosted Windows runner (tagged "windows"). Assumes that machine already has
+# the .NET 10 SDK installed -- there's no GitHub-Actions-style setup-dotnet step for GitLab, so
+# this is a one-time host prerequisite (same spirit as the LongPathsEnabled setup in README.md).
+build-test-publish:
+  stage: build
+  rules:
+    - when: always
+  tags:
+    - windows
+  script:
+    - dotnet build --configuration Release
+    - dotnet test --configuration Release
+    - dotnet publish src/WindowsBackupHelper.App/WindowsBackupHelper.App.csproj --configuration Release -p:PublishProfile=win-x64
+  artifacts:
+    name: "WindowsBackupHelper-win-x64-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - src/WindowsBackupHelper.App/bin/Release/net10.0-windows/win-x64/publish/*.exe
+    expire_in: 30 days

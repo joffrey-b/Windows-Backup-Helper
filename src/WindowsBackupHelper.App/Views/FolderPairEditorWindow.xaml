@@ -1,0 +1,162 @@
+<Window x:Class="WindowsBackupHelper.App.Views.FolderPairEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:WindowsBackupHelper.App.Views"
+        xmlns:models="clr-namespace:WindowsBackupHelper.Core.Models;assembly=WindowsBackupHelper.Core"
+        Title="Folder pair" Height="720" Width="820" WindowStartupLocation="CenterOwner"
+        Icon="pack://application:,,,/Assets/icon.ico"
+        FocusManager.FocusedElement="{Binding ElementName=SourcePathTextBox}">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Clear source -> destination convention: source is always on the left in green,
+             destination always on the right in orange, joined by an arrow, so it's never
+             ambiguous which side is read from and which side is written to (and potentially
+             wiped, if /MIR or /PURGE is set). -->
+        <Grid Grid.Row="0" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <GroupBox Grid.Column="0" BorderBrush="#2E7D32" BorderThickness="2">
+                <GroupBox.Header>
+                    <TextBlock Text="SOURCE (read from)" Foreground="#2E7D32" FontWeight="Bold" />
+                </GroupBox.Header>
+                <StackPanel Margin="4">
+                    <TextBox x:Name="SourcePathTextBox" Text="{Binding SourcePath, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button Content="Browse..." Command="{Binding BrowseSourcePathCommand}" HorizontalAlignment="Left" Margin="0,4,0,0" />
+                    <TextBlock Text="Credentials to use (none needed for local drives):" Foreground="Gray" Margin="0,8,0,2" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox Grid.Column="0" ItemsSource="{Binding CredentialTargets}" SelectedValue="{Binding SourceCredentialTargetId}"
+                                  SelectedValuePath="Id" DisplayMemberPath="Label" />
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="6,0,0,0">
+                            <Hyperlink Command="{Binding ClearSourceCredentialCommand}">Clear</Hyperlink>
+                        </TextBlock>
+                    </Grid>
+                </StackPanel>
+            </GroupBox>
+
+            <TextBlock Grid.Column="1" Text="&#8594;" FontSize="28" VerticalAlignment="Center" Margin="10,0" />
+
+            <GroupBox Grid.Column="2" BorderBrush="#E65100" BorderThickness="2">
+                <GroupBox.Header>
+                    <TextBlock Text="DESTINATION (written to — can be wiped by /MIR or /PURGE)" Foreground="#E65100" FontWeight="Bold" />
+                </GroupBox.Header>
+                <StackPanel Margin="4">
+                    <TextBox Text="{Binding DestinationPath, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button Content="Browse..." Command="{Binding BrowseDestinationPathCommand}" HorizontalAlignment="Left" Margin="0,4,0,0" />
+                    <TextBlock Text="Credentials to use (none needed for local drives):" Foreground="Gray" Margin="0,8,0,2" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox Grid.Column="0" ItemsSource="{Binding CredentialTargets}" SelectedValue="{Binding DestinationCredentialTargetId}"
+                                  SelectedValuePath="Id" DisplayMemberPath="Label" />
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="6,0,0,0">
+                            <Hyperlink Command="{Binding ClearDestinationCredentialCommand}">Clear</Hyperlink>
+                        </TextBlock>
+                    </Grid>
+                </StackPanel>
+            </GroupBox>
+        </Grid>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock Text="Pair name (optional):" VerticalAlignment="Center" Margin="0,0,4,0" />
+            <TextBox Text="{Binding Pair.Name, UpdateSourceTrigger=PropertyChanged}" Width="300" />
+        </StackPanel>
+
+        <TabControl Grid.Row="2">
+            <TabItem Header="Robocopy options">
+                <StackPanel>
+                    <CheckBox Content="Override job/app-level Robocopy options for this pair"
+                              IsChecked="{Binding PairOptionOverrides, Converter={x:Static local:NullToBoolConverter.Instance}, Mode=OneWay}"
+                              Command="{Binding TogglePairOptionOverridesCommand}" Margin="4" />
+                    <local:RobocopyOptionsEditor DataContext="{Binding PairOptionOverrides}"
+                                                  IsEnabled="{Binding Converter={x:Static local:NullToBoolConverter.Instance}}" />
+                </StackPanel>
+            </TabItem>
+
+            <TabItem Header="Exclusion rules">
+                <DockPanel>
+                    <Button DockPanel.Dock="Bottom" Content="Add rule" Command="{Binding AddExclusionRuleCommand}"
+                            HorizontalAlignment="Left" Margin="4" />
+                    <DataGrid ItemsSource="{Binding ExclusionRules}" AutoGenerateColumns="False" CanUserAddRows="False" Margin="4">
+                        <DataGrid.Columns>
+                            <DataGridComboBoxColumn Header="Type" SelectedItemBinding="{Binding PatternType}"
+                                                     ItemsSource="{x:Static local:EnumValueSource.PatternTypes}" />
+                            <DataGridTextColumn Header="Pattern" Binding="{Binding Pattern}" Width="*" />
+                            <DataGridComboBoxColumn Header="Target" SelectedItemBinding="{Binding TargetType}"
+                                                     ItemsSource="{x:Static local:EnumValueSource.TargetTypes}" />
+                            <DataGridCheckBoxColumn Header="Enabled" Binding="{Binding IsEnabled}" />
+                            <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*" />
+                            <DataGridTemplateColumn Header="" Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Remove"
+                                                Command="{Binding DataContext.RemoveExclusionRuleCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <TabItem Header="Verification">
+                <StackPanel Margin="8">
+                    <TextBlock Text="Checksum verification" FontWeight="Bold" />
+                    <ComboBox ItemsSource="{x:Static local:EnumValueSource.ChecksumModes}" SelectedItem="{Binding ChecksumMode}"
+                              HorizontalAlignment="Left" Width="220" Margin="0,4" />
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Manifest path:" VerticalAlignment="Center" Margin="0,0,4,0" />
+                        <TextBox Text="{Binding ChecksumManifestPath, UpdateSourceTrigger=PropertyChanged}" Width="400" />
+                        <Button Content="Browse..." Command="{Binding BrowseChecksumManifestPathCommand}" Margin="4,0,0,0" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Workers:" VerticalAlignment="Center" Margin="0,0,4,0" />
+                        <TextBox Text="{Binding ChecksumWorkers, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" Width="60" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Report output path:" VerticalAlignment="Center" Margin="0,0,4,0" />
+                        <TextBox Text="{Binding ChecksumReportOutputPath, UpdateSourceTrigger=PropertyChanged}" Width="400" />
+                        <Button Content="Browse..." Command="{Binding BrowseChecksumReportOutputPathCommand}" Margin="4,0,0,0" />
+                    </StackPanel>
+
+                    <Separator Margin="0,12" />
+
+                    <CheckBox Content="Run FLAC audit after copy" IsChecked="{Binding RunFlacAudit}" Margin="0,4" />
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Report output path:" VerticalAlignment="Center" Margin="0,0,4,0" />
+                        <TextBox Text="{Binding FlacReportOutputPath, UpdateSourceTrigger=PropertyChanged}" Width="400" />
+                        <Button Content="Browse..." Command="{Binding BrowseFlacReportOutputPathCommand}" Margin="4,0,0,0" />
+                    </StackPanel>
+                    <CheckBox Content="Errors/warnings only in per-folder tables" IsChecked="{Binding FlacErrorsOnly}" Margin="0,4" />
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Workers:" VerticalAlignment="Center" Margin="0,0,4,0" />
+                        <TextBox Text="{Binding FlacWorkers, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" Width="60" />
+                    </StackPanel>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Cancel" Width="90" Margin="0,0,8,0"
+                    Command="{Binding CancelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" />
+            <Button Content="Save" Width="90" IsDefault="True"
+                    Command="{Binding SaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" />
+        </StackPanel>
+    </Grid>
+</Window>

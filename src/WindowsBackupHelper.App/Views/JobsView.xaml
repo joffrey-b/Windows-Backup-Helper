@@ -1,0 +1,131 @@
+<UserControl x:Class="WindowsBackupHelper.App.Views.JobsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:WindowsBackupHelper.App.Views">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Drift-detection banner: ScheduleMetadata's cached fields vs. the live OS task. -->
+        <ItemsControl Grid.Row="0" ItemsSource="{Binding ScheduleDriftWarnings}" Margin="0,0,0,8">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Background="#FFF3CD" BorderBrush="#FFECB5" BorderThickness="1" Padding="8" Margin="0,0,0,4">
+                        <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="260" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: job list -->
+            <DockPanel Grid.Column="0" Margin="0,0,10,0">
+                <TextBlock DockPanel.Dock="Top" Text="Jobs" FontWeight="Bold" FontSize="16" Margin="0,0,0,4" />
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
+                    <Button Content="Add job" Command="{Binding AddJobCommand}" Width="90" Margin="0,0,8,0" />
+                    <Button Content="Delete" Command="{Binding DeleteJobCommand}" Width="90" />
+                </StackPanel>
+                <ListBox ItemsSource="{Binding Jobs}" SelectedItem="{Binding SelectedJob}" DisplayMemberPath="Name" />
+            </DockPanel>
+
+            <!-- Right: selected job detail -->
+            <Grid Grid.Column="1" IsEnabled="{Binding SelectedJob, Converter={x:Static local:NullToBoolConverter.Instance}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Name:" VerticalAlignment="Center" Margin="0,0,4,0" />
+                    <TextBox Grid.Column="1" Text="{Binding SelectedJob.Name, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,10,0" />
+                    <CheckBox Grid.Column="2" Content="Enabled" IsChecked="{Binding SelectedJob.IsEnabled}" VerticalAlignment="Center" />
+                </Grid>
+
+                <Grid Grid.Row="1" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Description:" VerticalAlignment="Center" Margin="0,0,4,0" />
+                    <TextBox Grid.Column="1" Text="{Binding SelectedJob.Description, UpdateSourceTrigger=PropertyChanged}" />
+                </Grid>
+
+                <TabControl Grid.Row="2">
+                    <TabItem Header="Folder pairs">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,4">
+                                <Button Content="Add pair..." Command="{Binding AddFolderPairCommand}" Width="100" Margin="0,0,8,0" />
+                                <Button Content="Edit pair..." Command="{Binding EditSelectedFolderPairCommand}" Width="100" Margin="0,0,8,0" />
+                                <Button Content="Remove pair" Command="{Binding DeleteFolderPairCommand}" Width="100" Margin="0,0,8,0" />
+                                <Button Content="Run this pair" Command="{Binding RunSelectedPairCommand}" Width="100" />
+                            </StackPanel>
+                            <DataGrid x:Name="FolderPairsDataGrid" ItemsSource="{Binding FolderPairs}" SelectedItem="{Binding SelectedFolderPair}"
+                                      AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="150" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Source" Binding="{Binding SourcePath}" Width="*" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Destination" Binding="{Binding DestinationPath}" Width="*" IsReadOnly="True" />
+                                    <DataGridTemplateColumn Header="Enabled">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <!-- A real CheckBox (rather than DataGridCheckBoxColumn) toggles on the
+                                                     first click instead of requiring the cell to become current first. -->
+                                                <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
+                                                          HorizontalAlignment="Center"
+                                                          Checked="FolderPairEnabledCheckBox_Toggled"
+                                                          Unchecked="FolderPairEnabledCheckBox_Toggled" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </TabItem>
+
+                    <TabItem Header="Job-level Robocopy options">
+                        <StackPanel>
+                            <CheckBox Content="Override app-level Robocopy option defaults for this job"
+                                      IsChecked="{Binding JobOptionOverrides, Converter={x:Static local:NullToBoolConverter.Instance}, Mode=OneWay}"
+                                      Command="{Binding ToggleJobOptionOverridesCommand}" Margin="4" />
+                            <local:RobocopyOptionsEditor DataContext="{Binding JobOptionOverrides}"
+                                                          IsEnabled="{Binding Converter={x:Static local:NullToBoolConverter.Instance}}" />
+                        </StackPanel>
+                    </TabItem>
+                </TabControl>
+
+                <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,8,0,0">
+                    <Button Content="Save job" Command="{Binding SaveJobCommand}" Width="100" Margin="0,0,8,0" />
+                    <Button Content="Schedule..." Command="{Binding ScheduleSelectedJobCommand}" Width="100" Margin="0,0,8,0" />
+                    <Button Content="Dry run (preview)" Command="{Binding DryRunJobCommand}" Width="130" Margin="0,0,8,0" />
+                    <Button Content="Run job" Command="{Binding RunJobCommand}" Width="100" FontWeight="Bold" />
+                    <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Margin="12,0,0,0" Foreground="DarkSlateGray" />
+                </StackPanel>
+
+                <Border Grid.Row="4" Background="#80000000" Visibility="{Binding IsBusy, Converter={x:Static local:BoolToVisibilityConverter.Instance}}">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" MinWidth="260">
+                        <TextBlock Text="Running..." Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" Margin="8,8,8,4" />
+                        <ProgressBar IsIndeterminate="True" Height="6" Margin="8,0,8,4" />
+                        <TextBlock Text="{Binding RunProgressText}" TextWrapping="Wrap" TextAlignment="Center"
+                                   Foreground="White" HorizontalAlignment="Center" Margin="8,0,8,8" MaxWidth="300" />
+                        <Button Content="Cancel job" Command="{Binding CancelRunningJobCommand}" Padding="8,2" HorizontalAlignment="Center" Margin="0,0,0,8" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

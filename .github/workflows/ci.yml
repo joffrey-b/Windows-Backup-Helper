@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # Core has no Windows-only dependencies (no P/Invoke, no WPF, no Task Scheduler COM), so its
+  # test suite runs on a cheap Linux runner alongside the full Windows job below.
+  core-tests-linux:
+    name: Core tests (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - run: dotnet test src/WindowsBackupHelper.Core.Tests/WindowsBackupHelper.Core.Tests.csproj --configuration Release
+
+  # Full solution (Core, Win, App, and both test projects) build + test, then publish the
+  # self-contained single-file win-x64 release artifact.
+  build-test-publish-windows:
+    name: Build, test, and publish (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      # FlacProcessRunnerTests exercises a real flac.exe and fails if one isn't on PATH --
+      # windows-latest doesn't preinstall it (Chocolatey itself is, though), so install it here.
+      - run: choco install flac -y --no-progress
+      - run: dotnet build --configuration Release
+      - run: dotnet test --configuration Release
+      - name: Publish self-contained single-file win-x64
+        run: dotnet publish src/WindowsBackupHelper.App/WindowsBackupHelper.App.csproj --configuration Release -p:PublishProfile=win-x64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WindowsBackupHelper-win-x64
+          path: src/WindowsBackupHelper.App/bin/Release/net10.0-windows/win-x64/publish/*.exe

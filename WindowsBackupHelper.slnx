@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WindowsBackupHelper.App/WindowsBackupHelper.App.csproj" />
+    <Project Path="src/WindowsBackupHelper.Core.Tests/WindowsBackupHelper.Core.Tests.csproj" />
+    <Project Path="src/WindowsBackupHelper.Core/WindowsBackupHelper.Core.csproj" />
+    <Project Path="src/WindowsBackupHelper.Win.Tests/WindowsBackupHelper.Win.Tests.csproj" />
+    <Project Path="src/WindowsBackupHelper.Win/WindowsBackupHelper.Win.csproj" />
+  </Folder>
+</Solution>

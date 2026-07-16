@@ -1,0 +1,98 @@
+<UserControl x:Class="WindowsBackupHelper.App.Views.RobocopyOptionsEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:models="clr-namespace:WindowsBackupHelper.Core.Models;assembly=WindowsBackupHelper.Core"
+             d:DataContext="{d:DesignInstance models:RobocopyOptionSet}"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="4">
+            <TextBlock Text="Robocopy options" FontWeight="Bold" Margin="0,0,0,4" />
+            <!-- UniformGrid gives every column equal width regardless of label length, and
+                 CheckBox stretches to fill it by default — without HorizontalAlignment="Left"
+                 here, clicking the empty space to the right of a short label (e.g. "Mirror
+                 (/MIR)" sharing a column width with "Restartable backup (/ZB)") would toggle it
+                 too, which is risky given some of these options are destructive. -->
+            <UniformGrid Columns="3">
+                <UniformGrid.Resources>
+                    <Style TargetType="CheckBox">
+                        <Setter Property="HorizontalAlignment" Value="Left" />
+                    </Style>
+                </UniformGrid.Resources>
+                <CheckBox Content="Mirror (/MIR)" IsThreeState="False" IsChecked="{Binding Mirror}" Margin="2"
+                          ToolTip="Destructive: deletes files at the destination that no longer exist at the source." />
+                <CheckBox Content="Copy subdirs (/S)" IsThreeState="False" IsChecked="{Binding CopySubdirectories}" Margin="2" />
+                <CheckBox Content="Copy empty subdirs (/E)" IsThreeState="False" IsChecked="{Binding CopyEmptySubdirectories}" Margin="2" />
+                <CheckBox Content="Purge (/PURGE)" IsThreeState="False" IsChecked="{Binding Purge}" Margin="2"
+                          ToolTip="Destructive: deletes destination files/dirs that no longer exist at the source." />
+                <CheckBox Content="Move files+dirs (/MOVE)" IsThreeState="False" IsChecked="{Binding Move}" Margin="2"
+                          ToolTip="Destructive: deletes source files/dirs after copying." />
+                <CheckBox Content="Move files only (/MOV)" IsThreeState="False" IsChecked="{Binding MoveFilesOnly}" Margin="2" />
+                <CheckBox Content="Copy all attrs (/COPYALL)" IsThreeState="False" IsChecked="{Binding CopyAll}" Margin="2" />
+                <CheckBox Content="Include security (/SEC)" IsThreeState="False" IsChecked="{Binding IncludeSecurity}" Margin="2" />
+                <CheckBox Content="Restartable (/Z)" IsThreeState="False" IsChecked="{Binding Restartable}" Margin="2" />
+                <CheckBox Content="Backup mode (/B)" IsThreeState="False" IsChecked="{Binding BackupMode}" Margin="2"
+                          ToolTip="Requires running as Administrator." />
+                <CheckBox Content="Restartable backup (/ZB)" IsThreeState="False" IsChecked="{Binding RestartableBackupMode}" Margin="2"
+                          ToolTip="Requires running as Administrator." />
+                <CheckBox Content="Copy symlinks (/SL)" IsThreeState="False" IsChecked="{Binding CopySymlinksAsLinks}" Margin="2" />
+                <CheckBox Content="Archive only (/A)" IsThreeState="False" IsChecked="{Binding ArchiveOnly}" Margin="2" />
+                <CheckBox Content="Archive + reset (/M)" IsThreeState="False" IsChecked="{Binding ArchiveOnlyAndReset}" Margin="2" />
+                <CheckBox Content="Exclude older (/XO)" IsThreeState="False" IsChecked="{Binding ExcludeOlder}" Margin="2" />
+                <CheckBox Content="Exclude newer (/XN)" IsThreeState="False" IsChecked="{Binding ExcludeNewer}" Margin="2" />
+                <CheckBox Content="Exclude changed (/XC)" IsThreeState="False" IsChecked="{Binding ExcludeChanged}" Margin="2" />
+                <CheckBox Content="Exclude extra (/XX)" IsThreeState="False" IsChecked="{Binding ExcludeExtra}" Margin="2" />
+                <CheckBox Content="FAT timestamps (/FFT)" IsThreeState="False" IsChecked="{Binding FatFileTimestampTolerance}" Margin="2"
+                          ToolTip="For cold exFAT/FAT-formatted external drives." />
+                <CheckBox Content="Assume FAT dest (/DST)" IsThreeState="False" IsChecked="{Binding AssumeFatDst}" Margin="2" />
+                <CheckBox Content="Verbose (/V)" IsThreeState="False" IsChecked="{Binding Verbose}" Margin="2" />
+                <CheckBox Content="Append to log" IsThreeState="False" IsChecked="{Binding AppendToLog}" Margin="2" />
+            </UniformGrid>
+
+            <TextBlock Text="Checked = on, unchecked = off. Number/text fields below that are left blank still inherit from the level below (app defaults or job overrides)." FontStyle="Italic" Foreground="Gray" Margin="2,4" TextWrapping="Wrap" />
+
+            <Grid Margin="0,8,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Retries (/R:)" VerticalAlignment="Center" Margin="2" />
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Retries, TargetNullValue=''}" Margin="2" />
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="Wait secs (/W:)" VerticalAlignment="Center" Margin="2" />
+                <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding WaitSeconds, TargetNullValue=''}" Margin="2" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Threads (/MT:)" VerticalAlignment="Center" Margin="2" />
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding MultithreadCount, TargetNullValue=''}" Margin="2" />
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="Copy flags (/COPY:)" VerticalAlignment="Center" Margin="2" />
+                <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding CopyFlags}" Margin="2" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Dir copy flags (/DCOPY:)" VerticalAlignment="Center" Margin="2" />
+                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding DirectoryCopyFlags}" Margin="2" />
+                <TextBlock Grid.Row="2" Grid.Column="2" Text="Min size (/MIN:)" VerticalAlignment="Center" Margin="2" />
+                <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding MinFileSizeBytes, TargetNullValue=''}" Margin="2" />
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Max size (/MAX:)" VerticalAlignment="Center" Margin="2" />
+                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding MaxFileSizeBytes, TargetNullValue=''}" Margin="2" />
+                <TextBlock Grid.Row="3" Grid.Column="2" Text="Min age (/MINAGE:)" VerticalAlignment="Center" Margin="2" />
+                <TextBox Grid.Row="3" Grid.Column="3" Text="{Binding MinFileAge}" Margin="2" />
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Max age (/MAXAGE:)" VerticalAlignment="Center" Margin="2" />
+                <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding MaxFileAge}" Margin="2" />
+            </Grid>
+
+            <TextBlock Text="Extra raw arguments (passthrough — anything not modeled above, e.g. /NFL /IPG:n)" Margin="2,8,2,0" />
+            <TextBox Text="{Binding ExtraRawArguments}" Margin="2" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

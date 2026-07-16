@@ -1,0 +1,67 @@
+<UserControl x:Class="WindowsBackupHelper.App.Views.StandaloneVerificationView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:WindowsBackupHelper.App.Views">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Verify Backup" FontWeight="Bold" FontSize="16" Margin="0,0,0,8" />
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel MaxWidth="700" HorizontalAlignment="Left">
+                <TextBlock TextWrapping="Wrap" Foreground="Gray" Margin="0,0,0,12"
+                           Text="Check an existing folder against a checksum manifest and/or run a FLAC audit — independent of any job or copy. Use this to periodically re-verify a backup that's already on disk (see the Help tab for why this is separate from the Folder Pair editor's Verification tab)." />
+
+                <TextBlock Text="Folder to check:" FontWeight="Bold" Margin="0,0,0,4" />
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <TextBox Text="{Binding FolderPath, UpdateSourceTrigger=PropertyChanged}" Width="500" />
+                    <Button Content="Browse..." Command="{Binding BrowseFolderCommand}" Margin="4,0,0,0" />
+                </StackPanel>
+
+                <TextBlock Text="Checksum verification" FontWeight="Bold" />
+                <ComboBox ItemsSource="{x:Static local:EnumValueSource.ChecksumModes}" SelectedItem="{Binding ChecksumMode}"
+                          HorizontalAlignment="Left" Width="220" Margin="0,4" />
+                <StackPanel Orientation="Horizontal" Margin="0,4">
+                    <TextBlock Text="Manifest path:" VerticalAlignment="Center" Margin="0,0,4,0" />
+                    <TextBox Text="{Binding ChecksumManifestPath, UpdateSourceTrigger=PropertyChanged}" Width="400" />
+                    <Button Content="Browse..." Command="{Binding BrowseChecksumManifestPathCommand}" Margin="4,0,0,0" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,4">
+                    <TextBlock Text="Workers:" VerticalAlignment="Center" Margin="0,0,4,0" />
+                    <TextBox Text="{Binding ChecksumWorkers, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" Width="60" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,4">
+                    <TextBlock Text="Report output path:" VerticalAlignment="Center" Margin="0,0,4,0" />
+                    <TextBox Text="{Binding ChecksumReportOutputPath, UpdateSourceTrigger=PropertyChanged}" Width="400" />
+                    <Button Content="Browse..." Command="{Binding BrowseChecksumReportOutputPathCommand}" Margin="4,0,0,0" />
+                </StackPanel>
+
+                <Separator Margin="0,12" />
+
+                <CheckBox Content="Run FLAC audit" IsChecked="{Binding RunFlacAudit}" Margin="0,4" />
+                <StackPanel Orientation="Horizontal" Margin="0,4">
+                    <TextBlock Text="Report output path:" VerticalAlignment="Center" Margin="0,0,4,0" />
+                    <TextBox Text="{Binding FlacReportOutputPath, UpdateSourceTrigger=PropertyChanged}" Width="400" />
+                    <Button Content="Browse..." Command="{Binding BrowseFlacReportOutputPathCommand}" Margin="4,0,0,0" />
+                </StackPanel>
+                <CheckBox Content="Errors/warnings only in per-folder tables" IsChecked="{Binding FlacErrorsOnly}" Margin="0,4" />
+                <StackPanel Orientation="Horizontal" Margin="0,4">
+                    <TextBlock Text="Workers:" VerticalAlignment="Center" Margin="0,0,4,0" />
+                    <TextBox Text="{Binding FlacWorkers, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" Width="60" />
+                </StackPanel>
+
+                <Separator Margin="0,12" />
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <Button Content="Run verification" Command="{Binding RunVerificationCommand}" Width="130" FontWeight="Bold" Margin="0,0,8,0" />
+                    <Button Content="Cancel" Command="{Binding CancelVerificationCommand}" Width="90" />
+                </StackPanel>
+                <TextBlock Text="{Binding RunProgressText}" TextWrapping="Wrap" Foreground="DarkSlateGray" Margin="0,0,0,4" />
+                <TextBlock Text="{Binding ResultMessage}" TextWrapping="Wrap" FontWeight="Bold" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

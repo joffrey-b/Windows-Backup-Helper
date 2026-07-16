@@ -1,0 +1,56 @@
+<UserControl x:Class="WindowsBackupHelper.App.Views.HelpView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel Margin="10">
+        <TextBlock DockPanel.Dock="Top" Text="Help" FontWeight="Bold" FontSize="16" Margin="0,0,0,8" />
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel MaxWidth="820" HorizontalAlignment="Left">
+
+                <TextBlock Text="What this app does" FontWeight="Bold" FontSize="13" Margin="0,0,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,16"
+                           Text="Windows Backup Helper drives Robocopy for you: instead of typing net use and long Robocopy commands by hand, you define reusable Jobs, run them on demand or on a schedule, and optionally verify what got copied with a checksum manifest and/or a FLAC audit." />
+
+                <TextBlock Text="Getting started, in order" FontWeight="Bold" FontSize="13" Margin="0,0,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,4" Text="1. (Optional) Credentials tab — add an entry if your source or destination needs a network login (e.g. a Synology NAS share). Skip this for local/external drives." />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,4" Text="2. Jobs tab — click 'Add job' and give it a name. A Job is just a named container for one or more Folder Pairs that run together." />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,4" Text="3. Inside the job, click 'Add pair...' and set Source and Destination (Browse... fills these in, or type a path directly). Pick a Credential in the dropdown if that side needs one." />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,4" Text="4. Leave Robocopy options alone to just inherit the app-wide defaults, or override them for this job/pair (see below)." />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,4" Text="5. Click 'Dry run (preview)' first — it shows what Robocopy would do without changing anything on disk. When you're confident, click 'Run job'." />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,16" Text="6. (Optional) Click 'Schedule...' to run the job automatically via Windows Task Scheduler." />
+
+                <TextBlock Text="How Robocopy options cascade" FontWeight="Bold" FontSize="13" Margin="0,0,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
+                           Text="There are three levels: Settings (app-wide defaults) → Job-level options → Pair-level options. Each folder pair resolves its actual Robocopy flags by starting from the app defaults, then applying any job-level override, then any pair-level override on top of that." />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
+                           Text="A checkbox is either on or off — there's no third 'inherit' state to worry about. Ticking 'Override... for this job/pair' takes a snapshot of what's currently in effect, so you only need to change the one or two options you actually care about; everything else already matches what would have applied anyway. Unticking it removes the override entirely and goes back to inheriting from the level below." />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,16" Foreground="#B71C1C"
+                           Text="Mirror (/MIR), Purge (/PURGE) and Move (/MOVE) are destructive: they delete files at the destination (or source, for Move) to match the other side. The app always asks for confirmation before running a job with any of these enabled — read that dialog carefully, especially the first time you run a new job." />
+
+                <TextBlock Text="Verification (optional, per folder pair)" FontWeight="Bold" FontSize="13" Margin="0,0,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
+                           Text="Checksum: after copying, computes a SHA256 manifest so you can later confirm nothing got corrupted in transit. Useful for cold/archival backups you won't touch again for a long time." />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,16"
+                           Text="FLAC audit: for music libraries — runs flac.exe against copied .flac files to catch corrupt or truncated audio that a plain file copy wouldn't detect." />
+
+                <TextBlock Text="Verify Backup tab (standalone verification)" FontWeight="Bold" FontSize="13" Margin="0,0,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
+                           Text="Runs the exact same checksum verification and FLAC audit as above, but against any folder you point it at directly — no Job, no Folder Pair, and no Robocopy copy involved. Use this to periodically re-check a backup that's already sitting on a drive, independent of when it was last copied." />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,16"
+                           Text="Why two places for verification, rather than one? The Folder Pair's Verification tab runs automatically as the last step of a job, right after Robocopy finishes copying — that's exactly what you want for 'back up and confirm it worked' in one go, and removing it would mean an extra manual step every single time you run a job. The Verify Backup tab covers a different need: checking on a backup you made a while ago, on your own schedule, without re-running (or having) a job for it. Both share the same underlying checksum/FLAC code and produce the same kind of detailed markdown report — they just start from a different place: 'a folder pair that was just copied' versus 'any folder you choose.'" />
+
+                <TextBlock Text="Exclusion rules (optional, per folder pair)" FontWeight="Bold" FontSize="13" Margin="0,0,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,16"
+                           Text="Wildcard patterns (e.g. *.tmp, Thumbs.db) are handed straight to Robocopy. A wildcard with a path in it (e.g. Disc 1/*.flac) or a regex rule is resolved against the actual folder tree before the run, so Robocopy still gets a plain list of names to skip." />
+
+                <TextBlock Text="Run History tab" FontWeight="Bold" FontSize="13" Margin="0,0,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,16"
+                           Text="Every run (manual or scheduled) is logged here with its outcome and a link to Robocopy's own log file. Exit codes 0-7 all mean success (they're a bitmask of what changed — files copied, extra files present, mismatches, etc.); only 8 and above indicate a real failure." />
+
+                <TextBlock Text="Trust and privacy" FontWeight="Bold" FontSize="13" Margin="0,0,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
+                           Text="No telemetry, no crash reporting, no data collection — the only network calls this app makes are the ones you configured (SMB to your NAS, Robocopy to your destinations). Credentials are stored exclusively in Windows Credential Manager, never in this app's own database." />
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

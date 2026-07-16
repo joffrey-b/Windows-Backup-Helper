@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- NotifyIcon has no WPF equivalent; System.Windows.Forms balloon tips are the v1
+         notification mechanism (zero AUMID/shortcut/COM-activator plumbing). -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- This project defines its own Main (Program.cs) to parse the run-job/headless flags
+         before any WPF startup, so the WPF SDK's auto-generated entry point must be suppressed. -->
+    <StartupObject>WindowsBackupHelper.App.Program</StartupObject>
+    <!-- Embeds the icon into the exe itself (Explorer, pinned taskbar, Alt-Tab before launch). -->
+    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WindowsBackupHelper.Core\WindowsBackupHelper.Core.csproj" />
+    <ProjectReference Include="..\WindowsBackupHelper.Win\WindowsBackupHelper.Win.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Also embedded as a WPF resource (separate from ApplicationIcon above) so Window.Icon
+         can reference it at runtime via a pack URI for the title bar and running taskbar button. -->
+    <Resource Include="Assets\icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- No PrivateAssets here: CommunityToolkit.Mvvm ships both a source generator AND the
+         runtime types (ObservableObject, RelayCommand) App actually calls at runtime.
+         PrivateAssets="all" was tried here to keep the analyzer's build-time-only nature
+         explicit, but it silently excludes the runtime DLL from self-contained single-file
+         publish output (dotnet build's plain bin/ copy isn't affected, so this only surfaces
+         when actually publishing) — confirmed by running the published exe, which threw
+         FileNotFoundException for CommunityToolkit.Mvvm on startup. -->
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+  </ItemGroup>
+
+</Project>
