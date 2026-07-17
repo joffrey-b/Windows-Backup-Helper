@@ -163,15 +163,30 @@ public sealed partial class StandaloneVerificationViewModel(
         {
             // A UNC path needs an authenticated SMB session before Directory.Exists (or anything
             // else) can see into it -- connecting first, then checking existence, mirrors
-            // JobExecutionService.RunFolderPairAsync's order for the same reason.
-            using var connection = ConnectIfNeeded(folderPath, CredentialTargetId);
+            // JobExecutionService.RunFolderPairAsync's order for the same reason. Both are
+            // blocking Win32 calls (WNetAddConnection2, Directory.Exists's own network round
+            // trip) with no async/cancellable overload, so they're run via Task.Run rather than
+            // called directly -- calling them inline here would block the UI thread for however
+            // long a cold connection to the share takes (DNS + SMB negotiation can easily be
+            // 10-20+ seconds), freezing the whole window instead of just this command.
+            // Generic wording, and only shown for a network path: a specific "connecting to
+            // network share" message here would make a same-LAN NAS look like it might be down,
+            // when the actual delay (if any) is usually name resolution or re-authenticating an
+            // already-open session, not the share being slow to respond.
+            if (folderPath.StartsWith(@"\\", StringComparison.Ordinal))
+            {
+                RunProgressText = "Please wait…";
+            }
 
-            if (!Directory.Exists(folderPath))
+            using var connection = await Task.Run(() => ConnectIfNeeded(folderPath, CredentialTargetId), _runCancellationTokenSource.Token);
+
+            if (!await Task.Run(() => Directory.Exists(folderPath), _runCancellationTokenSource.Token))
             {
                 ResultMessage = "Choose a folder that exists first.";
                 return;
             }
 
+            RunProgressText = null;
             var result = await verificationRunner.RunAsync(folderPath, settings, _runCancellationTokenSource.Token, progress);
 
             var parts = new List<string>();

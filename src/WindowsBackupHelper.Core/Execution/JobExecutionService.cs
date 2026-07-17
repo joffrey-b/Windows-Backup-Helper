@@ -297,7 +297,13 @@ public sealed class JobExecutionService(
                 $"No credential found in Windows Credential Manager for '{credentialTarget.Label}' ({credentialTarget.CredentialManagerTargetName}).");
         }
 
-        return smbConnectionManager.Connect(path, storedCredential.UserName, storedCredential.Password);
+        // WNetAddConnection2 is a blocking Win32 call with no async overload -- a cold
+        // connection (DNS + SMB negotiation) can take 10-20+ seconds, and this method is awaited
+        // directly from UI-thread-bound commands (JobsViewModel's Run/Dry run), so running it
+        // inline would freeze the whole window for that long instead of just this command.
+        return await Task.Run(
+            () => smbConnectionManager.Connect(path, storedCredential.UserName, storedCredential.Password), cancellationToken)
+            .ConfigureAwait(false);
     }
 
     private static RunOutcome AggregateOutcome(IReadOnlyList<FolderPairRunResult> results)
