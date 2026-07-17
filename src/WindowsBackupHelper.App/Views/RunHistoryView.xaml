@@ -1,6 +1,7 @@
 <UserControl x:Class="WindowsBackupHelper.App.Views.RunHistoryView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:WindowsBackupHelper.App.Views">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -42,7 +43,8 @@
                 <DataGridTextColumn Header="Exit code" Binding="{Binding Result.RobocopyExitCode}" />
                 <DataGridTextColumn Header="Summary" Binding="{Binding Result.RobocopyOutcomeSummary}" Width="*" />
                 <DataGridTextColumn Header="Files copied" Binding="{Binding Result.FilesCopied}" />
-                <DataGridTextColumn Header="Bytes copied" Binding="{Binding Result.BytesCopied}" />
+                <DataGridTextColumn Header="Size copied" Binding="{Binding Result.BytesCopied, Converter={x:Static local:ByteSizeConverter.Instance}}" />
+                <DataGridTextColumn Header="Extra files" Binding="{Binding Result.FilesExtras}" />
                 <DataGridTextColumn Header="Checksum" Binding="{Binding Result.ChecksumOutcomeSummary}" Width="*" />
                 <DataGridTextColumn Header="FLAC" Binding="{Binding Result.FlacOutcomeSummary}" Width="*" />
                 <DataGridTextColumn Header="Error" Binding="{Binding Result.ErrorMessage}" Width="*" />
