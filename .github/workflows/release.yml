@@ -25,4 +25,4 @@ jobs:
       - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "${{ github.ref_name }}" "src/WindowsBackupHelper.App/bin/Release/net10.0-windows/win-x64/publish/WindowsBackupHelper.App.exe" --title "${{ github.ref_name }}" --generate-notes
+        run: gh release create "${{ github.ref_name }}" "src/WindowsBackupHelper.App/bin/Release/net10.0-windows/win-x64/publish/WindowsBackupHelper.exe" --title "${{ github.ref_name }}" --generate-notes

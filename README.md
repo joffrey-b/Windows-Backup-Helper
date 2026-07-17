@@ -36,7 +36,7 @@ manifest and/or a FLAC audio integrity audit.
 
 ## Download
 
-Grab the latest `WindowsBackupHelper.App.exe` from the [Releases page](../../releases/latest).
+Grab the latest `WindowsBackupHelper.exe` from the [Releases page](../../releases/latest).
 
 - No installer, no admin rights, no .NET runtime to install first — it's a single, self-contained
   `.exe`. Just download and run it.

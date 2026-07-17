@@ -2,6 +2,10 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
+    <!-- Just the published exe's file name — the project file/namespace stay
+         WindowsBackupHelper.App, only AssemblyName (and therefore the output binary) drops
+         ".App" for a cleaner download name on the Releases page. -->
+    <AssemblyName>WindowsBackupHelper</AssemblyName>
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <!-- NotifyIcon has no WPF equivalent; System.Windows.Forms balloon tips are the v1

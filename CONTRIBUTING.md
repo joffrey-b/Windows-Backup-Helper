@@ -38,7 +38,7 @@ and adding its folder to `PATH`.
 dotnet publish src/WindowsBackupHelper.App/WindowsBackupHelper.App.csproj -c Release -p:PublishProfile=win-x64
 ```
 
-Produces a single self-contained `WindowsBackupHelper.App.exe` (no .NET runtime install required
+Produces a single self-contained `WindowsBackupHelper.exe` (no .NET runtime install required
 on the target machine) at `src/WindowsBackupHelper.App/bin/Release/net10.0-windows/win-x64/publish/`.
 
 ## CI
