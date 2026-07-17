@@ -16,10 +16,22 @@
                            Text="Check an existing folder against a checksum manifest and/or run a FLAC audit — independent of any job or copy. Use this to periodically re-verify a backup that's already on disk (see the Help tab for why this is separate from the Folder Pair editor's Verification tab)." />
 
                 <TextBlock Text="Folder to check:" FontWeight="Bold" Margin="0,0,0,4" />
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                     <TextBox Text="{Binding FolderPath, UpdateSourceTrigger=PropertyChanged}" Width="500" />
                     <Button Content="Browse..." Command="{Binding BrowseFolderCommand}" Margin="4,0,0,0" />
                 </StackPanel>
+                <TextBlock Text="Credentials to use (none needed for local drives):" Foreground="Gray" Margin="0,0,0,2" />
+                <Grid Width="500" HorizontalAlignment="Left" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox Grid.Column="0" ItemsSource="{Binding CredentialTargets}" SelectedValue="{Binding CredentialTargetId}"
+                              SelectedValuePath="Id" DisplayMemberPath="Label" />
+                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="6,0,0,0">
+                        <Hyperlink Command="{Binding ClearCredentialCommand}">Clear</Hyperlink>
+                    </TextBlock>
+                </Grid>
 
                 <TextBlock Text="Checksum verification" FontWeight="Bold" />
                 <ComboBox ItemsSource="{x:Static local:EnumValueSource.ChecksumModes}" SelectedItem="{Binding ChecksumMode}"

@@ -1,9 +1,12 @@
+using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
+using WindowsBackupHelper.Core.Credentials;
 using WindowsBackupHelper.Core.Execution;
 using WindowsBackupHelper.Core.Models;
+using WindowsBackupHelper.Core.Smb;
 
 namespace WindowsBackupHelper.App.ViewModels;
 
@@ -13,10 +16,19 @@ namespace WindowsBackupHelper.App.ViewModels;
 /// backup that's already on disk, as opposed to the Folder Pair editor's Verification tab, which
 /// runs immediately after a copy as part of a job. See HelpView for the full rationale.
 /// </summary>
-public sealed partial class StandaloneVerificationViewModel(VerificationRunner verificationRunner) : ObservableObject
+public sealed partial class StandaloneVerificationViewModel(
+    VerificationRunner verificationRunner,
+    CredentialTargetsViewModel credentialTargetsViewModel,
+    ICredentialStore credentialStore,
+    ISmbConnectionManager smbConnectionManager) : ObservableObject
 {
+    public ObservableCollection<CredentialTarget> CredentialTargets => credentialTargetsViewModel.Targets;
+
     [ObservableProperty]
     private string? _folderPath;
+
+    [ObservableProperty]
+    private string? _credentialTargetId;
 
     [ObservableProperty]
     private ChecksumMode _checksumMode = ChecksumMode.None;
@@ -70,6 +82,9 @@ public sealed partial class StandaloneVerificationViewModel(VerificationRunner v
     }
 
     [RelayCommand]
+    private void ClearCredential() => CredentialTargetId = null;
+
+    [RelayCommand]
     private void BrowseChecksumManifestPath()
     {
         var dialog = new SaveFileDialog { Filter = "SHA256 manifest (*.sha256)|*.sha256|All files (*.*)|*.*", OverwritePrompt = false };
@@ -105,9 +120,9 @@ public sealed partial class StandaloneVerificationViewModel(VerificationRunner v
     [RelayCommand(CanExecute = nameof(CanRun))]
     private async Task RunVerificationAsync()
     {
-        if (FolderPath is not { Length: > 0 } folderPath || !Directory.Exists(folderPath))
+        if (FolderPath is not { Length: > 0 } folderPath)
         {
-            ResultMessage = "Choose a folder that exists first.";
+            ResultMessage = "Choose a folder first.";
             return;
         }
 
@@ -146,6 +161,17 @@ public sealed partial class StandaloneVerificationViewModel(VerificationRunner v
 
         try
         {
+            // A UNC path needs an authenticated SMB session before Directory.Exists (or anything
+            // else) can see into it -- connecting first, then checking existence, mirrors
+            // JobExecutionService.RunFolderPairAsync's order for the same reason.
+            using var connection = ConnectIfNeeded(folderPath, CredentialTargetId);
+
+            if (!Directory.Exists(folderPath))
+            {
+                ResultMessage = "Choose a folder that exists first.";
+                return;
+            }
+
             var result = await verificationRunner.RunAsync(folderPath, settings, _runCancellationTokenSource.Token, progress);
 
             var parts = new List<string>();
@@ -176,5 +202,33 @@ public sealed partial class StandaloneVerificationViewModel(VerificationRunner v
             _runCancellationTokenSource.Dispose();
             _runCancellationTokenSource = null;
         }
+    }
+
+    /// <summary>Same reasoning as JobExecutionService.ConnectIfNeededAsync, just synchronous and
+    /// reading from the already-loaded CredentialTargets collection instead of a repository
+    /// round-trip -- this tab has no job/pair to inherit a connection from, so a folder path
+    /// under a network share needs its own SMB session established before anything can see
+    /// into it.</summary>
+    private IDisposable? ConnectIfNeeded(string path, string? credentialTargetId)
+    {
+        if (credentialTargetId is null || !path.StartsWith(@"\\", StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        var credentialTarget = CredentialTargets.FirstOrDefault(t => t.Id == credentialTargetId);
+        if (credentialTarget is null)
+        {
+            return null;
+        }
+
+        var storedCredential = credentialStore.TryRead(credentialTarget.CredentialManagerTargetName);
+        if (storedCredential is null)
+        {
+            throw new InvalidOperationException(
+                $"No credential found in Windows Credential Manager for '{credentialTarget.Label}' ({credentialTarget.CredentialManagerTargetName}).");
+        }
+
+        return smbConnectionManager.Connect(path, storedCredential.UserName, storedCredential.Password);
     }
 }
