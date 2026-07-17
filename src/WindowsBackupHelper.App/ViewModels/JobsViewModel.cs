@@ -49,9 +49,9 @@ public sealed partial class JobsViewModel(
     private string? _statusMessage;
 
     /// <summary>Live status line for the run currently in progress, or null when nothing is
-    /// running: "N file(s) copied so far" during the Robocopy copy itself, then a phase message
-    /// ("Verifying checksums. This may take a while.", etc.) once post-copy verification/FLAC
-    /// auditing starts for the current pair.</summary>
+    /// running: "N file(s) processed so far" during the Robocopy copy itself, then a phase
+    /// message ("Verifying checksums. This may take a while.", etc.) once post-copy
+    /// verification/FLAC auditing starts for the current pair.</summary>
     [ObservableProperty]
     private string? _runProgressText;
 
@@ -464,7 +464,7 @@ public sealed partial class JobsViewModel(
         RunProgressText = null;
         StatusMessage = dryRun ? "Running dry run..." : "Running...";
         _runCancellationTokenSource = new CancellationTokenSource();
-        var liveCopyProgress = new Progress<int>(count => RunProgressText = $"{count} file(s) copied so far");
+        var liveCopyProgress = new Progress<int>(count => RunProgressText = $"{count} file(s) processed so far");
         var verificationProgress = new Progress<VerificationProgress>(vp => RunProgressText = vp.FilesCompleted > 0
             ? $"{vp.PhaseMessage} {vp.FilesCompleted} file(s) processed so far."
             : vp.PhaseMessage);
